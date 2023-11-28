@@ -1,0 +1,671 @@
+1.minmax
+#include<stdio.h>
+#include<stdlib.h>
+void compare(int *min,int *max,int *min1,int *max1){
+	if(*min>*min1){
+		*min=*min1;
+	}
+	if(*max<*max1){
+		*max=*max1;
+	}
+}
+void minmax(int arr[],int *min,int *max,int l,int h){
+	int *min1,*max1;
+	if(l==h-1){
+		if(arr[l]<arr[h]){
+			*min=arr[l];
+			*max=arr[h];
+		}
+		else{
+			*min=arr[h];
+			*max=arr[l];
+		}
+	}
+	if(l==h){
+		*min=arr[l];
+		*max=arr[l];
+	}
+	else{
+		int mid=(l+h)/2;
+		minmax(arr,min,max,l,mid);
+		minmax(arr,&min1,&max1,mid+1,h);
+		compare(min,max,&min1,&max1);
+	}
+}
+
+int main(){
+	int arr[10],i,n,min,max;
+	printf("enter number of values in an array\n");
+	scanf("%d",&n);
+	printf("enter array values\n");
+	for(i=0;i<n;i++){
+	scanf("%d",&arr[i]);
+	}
+	min=arr[0];
+	max=arr[0];
+	minmax(arr,&min,&max,0,n-1);
+	printf("minimum:%d\n",min);
+	printf("maximum:%d\n",max);
+}
+3.knapsack using greedy approach
+
+#include<stdio.h>
+int merge(float arr[],int l,int h,int link[20]){
+	int i=l,j=h,k=0;
+	while(i>0&&j>0){
+		if(arr[i]>arr[j]){
+			link[k]=i;
+			k=i;
+			i=link[i];
+		}
+		else{
+			link[k]=j;
+			k=j;
+			j=link[j];
+		}
+	}
+	if(i==0){
+		link[k]=j;
+	}
+	else{
+		link[k]=i;
+	}
+	return link[0];
+}
+int mergesort(float arr[],int l,int h,int link[20]){
+	if(l<h){
+		int q,r;
+		int mid=(l+h)/2;
+		q=mergesort(arr,l,mid,link);
+		r=mergesort(arr,mid+1,h,link);
+		return merge(arr,q,r,link);
+	}
+}
+void knapsack(float p[],float w[],float r[],float x[],int u,int n){
+	int link[20],i,res;
+	for(i=1;i<=n;i++){
+		link[i]=0;
+		x[i]=0;
+	}
+	res=mergesort(r,1,n,link);
+	printf("%d",res);
+	while(res!=0){
+		if(w[res]>u){
+		break;
+	}
+		else{
+			x[res]=1;
+			u=u-w[res];
+		}
+		res=link[res];
+	}
+	x[res]=u/w[res];
+	return;
+}
+int main(){
+	float w[20],p[20],r[20],x[20];
+	int n,u,i,j;
+	printf("enter n value\n");
+	scanf("%d",&n);
+	printf("enter capacity of knapsack\n");
+	scanf("%d",&u);
+	printf("enter profits\n");
+	for(i=1;i<=n;i++){
+		scanf("%f",&p[i]);
+	}
+	printf("enter weights\n");
+	for(i=1;i<=n;i++){
+		scanf("%f",&w[i]);
+	}
+	for(i=1;i<=n;i++){
+		r[i]=p[i]/w[i];
+	}
+	knapsack(p,w,r,x,u,n);
+	for(i=1;i<=n;i++){
+		printf("%f ",x[i]);
+	}
+	float pr=0;
+	for(i=1;i<=n;i++){
+		pr+=p[i]*x[i];
+	}
+	printf("profit:%f",pr);
+	return 0;
+}
+
+
+4.minimum spanning tree using krushkal
+
+#include<stdio.h>
+void adjust(int a[],int i,int n){
+	int item,j,k;
+	item=a[i];
+	j=2*i;
+	while(j<=n){
+		if(j<n&&a[j]>a[j+1]){
+			j=j+1;
+		}
+		if(item<a[j]){
+			break;
+		}
+		a[j/2]=a[j];
+		j=j*2;
+	}
+	a[j/2]=item;
+	
+}
+void heapify(int a[],int n){
+	int i;
+	for(i=n/2;i>=1;i--){
+		adjust(a,i,n);
+	}
+}
+int delete(int a[],int n){
+	int x=a[1];
+	a[1]=a[n];
+	adjust(a,1,n-1);
+	return x;
+}
+int find(int p[10],int i){
+	while(p[i]>0)
+	{
+		i=p[i];
+	}
+	return i;
+}
+void findunion(int p[10],int i,int j){
+	p[i]=j;
+	return;
+}
+int krushkal(int a[10][10],int n){
+	int h[20],i,j,min,u,v,m,l,p1,p2;
+	int mincost=0,k=1,flag=0,p[10];
+	for(i=1;i<=n;i++){
+		for(j=i;j<=n;j++){
+			if(a[i][j]!=999){
+				h[k]=a[i][j];
+				k++;
+			}
+		}
+	}
+	for(i=1;i<=n;i++){
+		p[i]=-1;
+	}
+	heapify(h,k-1);
+	i=1;
+	while(i<n){
+		min=delete(h,k-i);
+		for(m=1;m<=n;m++){
+			flag=0;
+			for(l=m;l<=n;l++){
+				if(a[m][l]==min){
+					u=m;
+					v=l;
+					a[m][l]=999;
+					flag=1;
+					break;
+				}
+			}
+			if(flag==1){
+				break;
+			}
+		}
+		p1=find(p,u);
+		p2=find(p,v);
+		if(p1!=p2){
+			mincost=mincost+min;
+			findunion(p,p1,p2);
+			i++;
+		}
+		
+	}
+	return mincost;
+	
+}
+int main(){
+	int n,i,j,cost=0;
+	int a[10][10];
+	printf("enter number of vertices\n");
+	scanf("%d",&n);
+	printf("enter values\n");
+	for(i=1;i<=n;i++){
+		for(j=1;j<=n;j++){
+			scanf("%d",&a[i][j]);
+		}
+	}
+	cost=krushkal(a,n);
+	printf("minimum cost will be %d",cost);
+}
+
+5.shortest path using greedy approach
+#include<stdio.h>
+void shortest(int v,int a[10][10],int dist[],int p[],int n){
+	int i,j,s[10],u,w,min;
+	for(i=1;i<=n;i++){
+		s[i]=0;
+		dist[i]=a[v][i];
+		p[i]=v;
+	}
+	s[v]=1;
+	dist[v]=0;
+	p[v]=0;
+	min=999;
+	for(i=2;i<n;i++){
+		min=999;
+		for(j=1;j<=n;j++){
+			if(dist[j]<min&&s[j]==0){
+				min=dist[j];
+				u=j;
+			}
+		}
+		s[u]=1;
+		for(j=1;j<=n;j++){
+			if(dist[j]>dist[u]+a[u][j]&&s[j]==0){
+				dist[j]=dist[u]+a[u][j];
+				p[j]=u;
+			}
+		}
+		
+	}
+}
+int main(){
+	int i,j,n,a[10][10],dist[10],p[10],v;
+	printf("enter number of vertices\n");
+	scanf("%d",&n);
+	printf("enter graph values\n");
+	for(i=1;i<=n;i++){
+		for(j=1;j<=n;j++){
+			scanf("%d",&a[i][j]);
+		}
+	}
+	printf("enter source node\n");
+	scanf("%d",&v);
+	shortest(v,a,dist,p,n);
+	printf("%d\n",count);
+	for(i=1;i<=n;i++){
+		for(j=1;j<=n;j++){
+			printf("%d ",a[i][j]);
+		}
+		printf("\n");
+	}
+	for(i=1;i<=n;i++){
+		printf("%d ",p[i]);
+	}
+	printf("\n");
+	for(i=1;i<=n;i++){
+		printf("%d ",dist[i]);
+	}
+}
+
+6.shortest path from surce to destination using dynamic approach
+
+forward approach:
+#include<stdio.h>
+int msgraph(int c[20][20],int n,int k,int p[20]){
+        int j,r,min=999,i;
+        int cost[20],d[20];
+        for(i=1;i<=n;i++){
+                cost[i]=999;
+        }
+        cost[n]=0;
+        r=n;
+        p[1]=1;
+        p[k]=n;
+        for(j=n-1;j>=1;j--){
+                min=999;
+                for(i=j+1;i<=n;i++){
+                        if(c[j][i]+cost[i]<min){
+                                min=c[j][i]+cost[i];
+                                r=i;
+                        }
+                }
+                cost[j]=c[j][r]+cost[r];
+                d[j]=r;
+        }
+        for(i=2;i<k;i++){
+                p[i]=d[p[i-1]];
+        }
+        return cost[1];
+}
+int main(){
+        int i,j,n,k,p[20],g[20][20],cost;
+printf("enter number of nodes\n");
+        scanf("%d",&n);
+        printf("enter number of sets\n");
+        scanf("%d",&k);
+        printf("enter matrix value\n");
+        for(i=1;i<=n;i++){
+                //printf("enter new row\n");
+                for(j=1;j<=n;j++){
+                        scanf("%d",&g[i][j]);
+                }
+        }
+        cost=msgraph(g,n,k,p);
+        printf("minimum cost will be :%d\n",cost);
+        printf("path\n");
+        for(i=1;i<=k;i++){
+        	if(i!=k){
+                printf("%d->",p[i]);
+            }
+            else{
+            	printf("%d\n",p[i]);
+			}
+        }
+        return 0;
+}
+
+backward:
+
+#include<stdio.h>
+int msgraph(int c[20][20],int n,int k,int p[20]){
+        int j,r,min=999,i;
+        int cost[20],d[20];
+        for(i=1;i<=n;i++){
+                cost[i]=999;
+        }
+        cost[1]=0;
+        r=n;
+        p[1]=1;
+        p[k]=n;
+        d[1]=0;
+        for(j=2;j<=n;j++){
+                min=999;
+                for(i=j-1;i>=1;i--){
+                        if(c[i][j]+cost[i]<min){
+                                min=c[i][j]+cost[i];
+                                r=i;
+                        }
+                        if(c[i][j]+cost[i]==min&&min!=999){
+                        	if(cost[r]>cost[i]){
+                        		min=c[i][j]+cost[i];
+                        		r=i;
+							}
+						}
+                }
+                cost[j]=c[r][j]+cost[r];
+                d[j]=r;
+        }
+        for(i=k-1;i>=2;i--){
+                p[i]=d[p[i+1]];
+        }
+        return cost[n];
+}
+int main(){
+        int i,j,n,k,p[20],g[20][20],cost;
+printf("enter number of nodes\n");
+        scanf("%d",&n);
+        printf("enter number of sets\n");
+        scanf("%d",&k);
+        printf("enter matrix value\n");
+        for(i=1;i<=n;i++){
+                //printf("enter new row\n");
+                for(j=1;j<=n;j++){
+                        scanf("%d",&g[i][j]);
+                }
+        }
+        cost=msgraph(g,n,k,p);
+        printf("minimum cost will be :%d\n",cost);
+        printf("path\n");
+        for(i=1;i<=k;i++){
+        	if(i!=k){
+                printf("%d->",p[i]);
+            }
+            else{
+            	printf("%d\n",p[i]);
+			}
+        }
+        return 0;
+}
+
+7.all pair shortest path
+#include <stdio.h>
+int cost[20][20],A[20][20];
+int min(int a,int b)
+{
+    return (a>b)?b:a;
+}
+void paths(int cost[20][20],int n)
+{
+    for(int i=1;i<=n;i++)
+    for(int j=1;j<=n;j++)
+    A[i][j]=cost[i][j];
+    for(int k=1;k<=n;k++)
+    for(int i=1;i<=n;i++)
+    for(int j=1;j<=n;j++)
+    A[i][j]=min(A[i][j],A[i][k]+A[k][j]);
+}
+int main()
+{
+    int n;
+    printf("enter n value : ");
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++)
+    for(int j=1;j<=n;j++)
+    {
+        cost[i][j]=999;
+        if(i==j)
+        cost[i][j]=0;
+    }
+    cost[1][2]=4;cost[1][3]=11;cost[2][1]=6;cost[2][3]=2;cost[3][1]=3;
+    paths(cost,n);
+    printf("paths are: \n");
+    for(int i=1;i<=n;i++)
+    for(int j=1;j<=n;j++)
+    printf("(%d,%d) = %d\n",i,j,A[i][j]);
+    return 0;
+}
+
+8.dynamic knapsack
+#include <stdio.h>
+int p[20],w[20],x[20],t[20][20],n,m;
+void read(int a[20],int n)
+{
+    for(int i=1;i<=n;i++)
+    scanf("%d",&a[i]);
+}
+int maxi(int a,int b)
+{
+    return (a>b)?a:b;
+}
+int find(int k,int e)
+{
+    for(int i=1;i<=m;i++)
+    if(t[k][i]==e)
+    return 1;
+    return 0;
+}
+int knapsack(int m,int n)
+{
+    for(int i=1;i<=n;i++)
+    for(int j=1;j<=m;j++)
+    {
+    if(j<w[i])
+    t[i][j]=t[i-1][j];
+    else
+    t[i][j]=maxi(t[i-1][j],t[i-1][j-w[i]]+p[i]);
+    }
+    return t[n][m];
+}
+int main()
+{
+    int a,b,k;
+    printf("enter n value : ");
+    scanf("%d",&n);
+    printf("enter capacity : ");
+    scanf("%d",&m);
+    printf("enter weigths :\n ");
+    read(w,n);
+    printf("enter profits : \n ");
+    read(p,n);
+    a=b=knapsack(m,n);
+    k=n;
+    while(a>0)
+    {
+        if(find(k-1,a))
+        x[k]=0;
+        else
+        {
+        x[k]=1;
+        a=a-p[k];
+        }
+        k--;
+    }
+    printf("max profit is : %d\n",b);
+    printf("obj taken : \n");
+    for(int i=1;i<=n;i++)
+    printf("%d\n",x[i]);
+    return 0;
+}
+9.n-queen
+
+#include<stdio.h>
+#include<stdbool.h>
+bool place(int k,int i,int x[]){
+	int j;
+	for(j=1;j<k;j++){
+		if(x[j]==i||abs(k-j)==abs(i-x[j])){
+			return false;
+		}
+	}
+	return true;
+}
+void nqueen(int n,int k,int x[]){
+	int i,j;
+	for(i=1;i<=n;i++){
+		if(place(k,i,x)){
+			x[k]=i;
+			if(k==n){
+				for(j=1;j<=n;j++){
+					printf("%d ",x[j]);
+				}
+				printf("\n");
+				return;
+			}
+			else{
+				nqueen(n,k+1,x);
+			}
+		}
+	}
+}
+int main(){
+	int n,x[20],i;
+	printf("enter number of queens\n");
+	scanf("%d",&n);
+	for(i=0;i<=n;i++){
+		x[i]=0;
+	}
+	nqueen(n,1,x);
+}
+
+10.hamiltonian
+ 
+#include<stdio.h>
+#include<stdbool.h>
+void nextvalue(int x[],int k,int n,int g[20][20]){
+	int j;
+	while(true){
+		x[k]=(x[k]+1)%(n+1);
+		if(x[k]==0){
+			return;
+		}
+		if(g[x[k-1]][x[k]]!=0){
+			for(j=1;j<k;j++){
+				if(x[j]==x[k]){
+					break;
+				}
+			}
+			if(j==k){
+				if(k<n||(k==n&&g[x[k]][x[1]]!=0))
+				return;
+			}
+		}
+	}
+}
+void hamiltonian(int x[],int n,int k,int g[20][20]){
+	int i;
+	while(true){
+		nextvalue(x,k,n,g);
+		if(x[k]==0){
+			return;
+		}
+		if(k==n){
+			for(i=1;i<=n;i++){
+				printf("%d ",x[i]);
+			}
+			printf("%d\n",x[1]);
+			return;
+		}
+		if(k<n){
+			hamiltonian(x,n,k+1,g);
+		}
+	}
+}
+int main(){
+	int i,j,g[20][20],n,x[20];
+	printf("enter number of node\n");
+	scanf("%d",&n);
+	printf("enter graph values\n");
+	for(i=1;i<=n;i++){
+		for(j=1;j<=n;j++){
+			scanf("%d",&g[i][j]);
+		}
+	}
+	for(i=1;i<=n;i++){
+		x[i]=0;
+	}
+	x[1]=1;
+	hamiltonian(x,n,2,g);
+	return 0;
+}
+
+11.rabinkarp
+
+#include<stdio.h>
+#include<string.h>
+void rk(char txt[],char P[],int d,int q){
+	int i,j;
+	int m=strlen(P);
+	int n=strlen(txt);
+	int t=0;
+	int p=0;
+	int h=1;
+	for(i=0;i<m-1;i++){
+		h=(h*d)%q;
+	}
+	for(i=0;i<m;i++){
+		p=(d*p+P[i])%q;
+		t=(d*t+txt[i])%q;
+	}
+	printf("%d",p);
+	printf("%d",t);
+	for(i=0;i<=n-m;i++){
+		if(p==t){
+			for(j=0;j<m;j++){
+				if(txt[i+j]!=P[j]){
+					break;
+				}
+			}
+			if(j==m)
+			{
+			printf("pattern occurs at:%d\n",i);
+			}
+		}
+			if(i<n-m)
+			{
+			t = (d * (t - txt[i] * h) + txt[i + m]) % q;
+		}
+			if(t<0)
+			{
+			t=(t+q);
+		    }
+	}
+	
+}
+int main(){;
+	char txt[20],P[20];
+	printf("enter text\n");
+	gets(txt);
+	printf("enter pattern\n");
+	gets(P);
+	rk(txt,P,10,11);
+	return 0;
+}
